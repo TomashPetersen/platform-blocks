@@ -1,3 +1,8 @@
+const KEYS = {
+  left: 37,
+  right: 39
+}
+
 let game =  {
   ctx: null,
   platform: null,
@@ -19,15 +24,13 @@ let game =  {
 
   setEvents() {
     window.addEventListener("keydown", e => {
-      if (e.keyCode === 37) {
-        this.platform.dx = - this.platform.velocity;
-      } else if (e.keyCode === 39) {
-        this.platform.dx = this.platform.velocity;
+      if (e.keyCode === KEYS.left || e.keyCode === KEYS.right) {
+        this.platform.start(e.keyCode);
       } 
     });
 
     window.addEventListener("keyup", e => {
-      this.platform.dx = 0;
+      this.platform.stop();
     });
   },
 
@@ -102,7 +105,18 @@ game.platform = {
   move () {
     if (this.dx) {
     this.x += this.dx;
+    game.ball.x  += this.dx;
     }
+  },
+  start (direction) {
+    if (direction === KEYS.left) {
+      this.dx = - this.velocity;
+    } else if (direction === KEYS.right) {
+      this.dx = this.velocity;
+    }
+  },
+  stop () {
+    this.dx = 0;
   }
 }; 
 
@@ -110,7 +124,9 @@ game.ball = {
   x: 320,
   y: 280,
   width: 20,
-  height: 20
+  height: 20,
+  velocity: 6,
+  dx: 0,
 };
 
 window.addEventListener("load", () => {
