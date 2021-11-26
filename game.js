@@ -21,6 +21,10 @@ let game =  {
     platform: null,
     block: null
   },
+
+  sounds: {
+    bump: null
+  },
   
   init() {
     this.ctx = document.getElementById("mycanvas").getContext("2d");
@@ -46,7 +50,8 @@ let game =  {
   preload(callback) {
     let loaded = 0;
     let required = Object.keys(this.sprites).length;
-    let onImageLoad = () => {
+        required = Object.keys(this.sounds).length;
+    let onRecourceLoad = () => {
       ++loaded;
       if (loaded >= required) {
         callback();
@@ -56,7 +61,12 @@ let game =  {
     for (let key in this.sprites) {
       this.sprites[key] = new Image();
       this.sprites[key].src = `img/${key}.png`;
-      this.sprites[key].addEventListener("load", onImageLoad);
+      this.sprites[key].addEventListener("load", onRecourceLoad);
+    }
+
+    for (let key in this.sounds) {
+      this.sprites[key] = new Audio("sounds/" + key + ".mp3");
+      this.sprites[key].addEventListener("canplaythrough", onRecourceLoad, {once:true});
     }
 
   },
@@ -113,6 +123,7 @@ let game =  {
       if (block.active && this.ball.collide(block)) {
           this.ball.bumpBlock(block);
           this.addScore();
+          this.sounds.bump.play();
       }
     }
   },
