@@ -12,6 +12,7 @@ let game =  {
   blocks: [],
   rows: 4,
   cols: 8,
+  score: 0,
   width: 640,
   height: 360,
   sprites: {
@@ -99,10 +100,19 @@ let game =  {
     this.ball.move();
   },
 
+  addScore() {
+    ++this.score;
+
+    if (this.score >= this.blocks.length) {
+      this.end("You are win!");
+    }
+  },
+
   collideBlocks() {
     for (let block of this.blocks) {
       if (block.active && this.ball.collide(block)) {
           this.ball.bumpBlock(block);
+          this.addScore();
       }
     }
   },
@@ -119,6 +129,12 @@ let game =  {
       this.create();
       this.run();
     });
+  },
+
+  end(message) {
+    this.running = false;
+    alert(message);
+    window.location.reload();
   },
 
   run() {
@@ -180,9 +196,7 @@ game.ball = {
       this.y = 0;
       this.dy = this.velocity;
     } else if (ballBottomSide > worldBottomSide) {
-      game.running = false;
-      alert('You are lose');
-      window.location.reload();
+      game.end("You are lose");
     }
   },
   collide(elem) {
