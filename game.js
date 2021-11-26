@@ -6,6 +6,7 @@ const KEYS = {
 
 let game =  {
   ctx: null,
+  running: true,
   platform: null,
   ball: null,
   blocks: [],
@@ -61,7 +62,9 @@ let game =  {
 
   renderBlocks() {
     for (let block of this.blocks) {
-      this.ctx.drawImage(this.sprites.block, block.x, block.y);
+      if (block.active) {
+        this.ctx.drawImage(this.sprites.block, block.x, block.y);
+      }
     }
   },
 
@@ -77,6 +80,7 @@ let game =  {
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
         this.blocks.push({
+          active: true,
           width: 60,
           height: 20,
           x: 64 * col + 65,
@@ -87,20 +91,18 @@ let game =  {
   },
 
   update() {
-    this.platform.move();
-    this.ball.move();
     this.collideBlocks();
     this.collidePlatform();
-
-    
-
-    
+    this.ball.collideWorldBounds();
+    this.platform.collideWorldBounds();
+    this.platform.move();
+    this.ball.move();
   },
 
   collideBlocks() {
     for (let block of this.blocks) {
-      if (this.ball.collide(block)) {
-        this.ball.bumpBlock(block);
+      if (block.active && this.ball.collide(block)) {
+          this.ball.bumpBlock(block);
       }
     }
   },
@@ -120,11 +122,13 @@ let game =  {
   },
 
   run() {
-    window.requestAnimationFrame(() => {
-      this.update();
-      this.render();
-      this.run();
-    });
+    if (this.running) {
+        window.requestAnimationFrame(() => {
+          this.update();
+          this.render();
+          this.run();
+        });
+    }
   },
 
   random(min, max) {
@@ -152,6 +156,35 @@ game.ball = {
       this.x += this.dx;
     }
   }, 
+  collideWorldBounds() {
+    let x = this.x + this.dx;
+    let y = this.y + this.dy;
+
+    let ballLeftSide = x;
+    let ballRightSide = ballLeftSide + this.width;
+    let ballTopSide = y;
+    let ballBottomSide = ballTopSide + this.height;
+
+    let worldLeftSide = 0;
+    let worldRightSide = game.width;
+    let worldTopSide = 0;
+    let worldBottomSide = game.height;
+
+    if (ballLeftSide < worldLeftSide) {
+      this.x = 0;
+      this.dx = this.velocity
+    } else if (ballRightSide > worldRightSide) {
+      this.x = worldRightSide - this.width;
+      this.dx = -this.velocity
+    } else if (ballTopSide <  worldTopSide) {
+      this.y = 0;
+      this.dy = this.velocity;
+    } else if (ballBottomSide > worldBottomSide) {
+      game.running = false;
+      alert('You are lose');
+      window.location.reload();
+    }
+  },
   collide(elem) {
     let x = this.x + this.dx;
     let y = this.y + this.dy;
@@ -165,11 +198,17 @@ game.ball = {
   },
   bumpBlock(block) {
     this.dy *= -1;
+    block.active = false;
   },
   bumpPlatform(platform) {
-    this.dy *= -1;
-    let touchX = this.x + this.width/2;
-    this.dx = this.velocity * platform.getTouchOffset(touchX);
+    if (platform.dx) {
+      this.x += platform.dx;
+    }
+    if (this.dy > 0) {
+      this.dy = -this.velocity;
+      let touchX = this.x + this.width / 2;
+      this.dx = this.velocity * platform.getTouchOffset(touchX);
+    }
   }
 };
 
@@ -210,6 +249,15 @@ game.platform = {
    let offset = this.width - diff;
    let res = 2 * offset / this.width;
     return res - 1;
+  },
+  collideWorldBounds() {
+    let platformLeft = this.x + this.dx;
+    let platformRight = platformLeft + this.width;
+    let worldLeftSide = 0;
+    let worldRightSide = game.width;
+    if (platformLeft < worldLeftSide || platformRight > worldRightSide)  {
+      this.dx = 0;
+    }
   }
 };
 
