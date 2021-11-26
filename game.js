@@ -50,25 +50,31 @@ let game =  {
   preload(callback) {
     let loaded = 0;
     let required = Object.keys(this.sprites).length;
-        required = Object.keys(this.sounds).length;
-    let onRecourceLoad = () => {
+        required += Object.keys(this.sounds).length;
+    let onResourceLoad = () => {
       ++loaded;
       if (loaded >= required) {
         callback();
       }
-    }
+    };
 
+    this.preloadSprites(onResourceLoad);
+    this.preloadAudio(onResourceLoad);
+  },
+
+  preloadSprites(onResourceLoad) {
     for (let key in this.sprites) {
       this.sprites[key] = new Image();
       this.sprites[key].src = `img/${key}.png`;
-      this.sprites[key].addEventListener("load", onRecourceLoad);
+      this.sprites[key].addEventListener("load", onResourceLoad);
     }
+  },
 
+  preloadAudio(onResourceLoad) {
     for (let key in this.sounds) {
-      this.sprites[key] = new Audio("sounds/" + key + ".mp3");
-      this.sprites[key].addEventListener("canplaythrough", onRecourceLoad, {once:true});
+      this.sounds[key] = new Audio("sounds/" + key + ".mp3");
+      this.sounds[key].addEventListener("canplaythrough", onResourceLoad, { once: true });
     }
-
   },
 
   renderBlocks() {
@@ -131,6 +137,7 @@ let game =  {
   collidePlatform() {
     if (this.ball.collide(this.platform)) {
       this.ball.bumpPlatform(this.platform);
+      this.sounds.bump.play();
     }
   },
 
@@ -199,13 +206,16 @@ game.ball = {
 
     if (ballLeftSide < worldLeftSide) {
       this.x = 0;
-      this.dx = this.velocity
+      this.dx = this.velocity;
+      game.sounds.bump.play();
     } else if (ballRightSide > worldRightSide) {
       this.x = worldRightSide - this.width;
-      this.dx = -this.velocity
+      this.dx = -this.velocity;
+      game.sounds.bump.play();
     } else if (ballTopSide <  worldTopSide) {
       this.y = 0;
       this.dy = this.velocity;
+      game.sounds.bump.play();
     } else if (ballBottomSide > worldBottomSide) {
       game.end("You are lose");
     }
